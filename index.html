@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>DimScript</title>
   <link rel="stylesheet" href="style.css">
+  <!-- Добавляем Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -16,6 +19,8 @@
   <button onclick="showImageManager()">🖼️ Менеджер картинок</button>
   <button onclick="exportProject()">💾 Экспорт проекта</button>
   <button onclick="document.getElementById('fileInput').click()">📂 Импорт проекта</button>
+  <button onclick="showCommunity()">🌐 Сообщество</button>
+  <button onclick="showNeuroGenerator()">🧠 Нейро-генератор</button>
   <input type="file" id="fileInput" accept=".dimscript">
 </div>
 
@@ -33,6 +38,518 @@
   </div>
 </div>
 
+<div id="community">
+  <div id="communityContent">
+    <h2>Сообщество DimScript</h2>
+    <button onclick="hideCommunity()">✖️ Закрыть</button>
+    
+    <div id="publishSection">
+      <h3>Опубликовать проект</h3>
+      <input type="text" id="projectName" placeholder="Название проекта" style="width: 300px; padding: 8px; margin: 5px; background: #111; color: #00ff88; border: 1px solid #00ff88;">
+      <input type="text" id="authorName" placeholder="Ваше имя" style="width: 200px; padding: 8px; margin: 5px; background: #111; color: #00ff88; border: 1px solid #00ff88;">
+      <br>
+      <textarea id="projectDescription" placeholder="Описание проекта" style="width: 100%; height: 60px; background: #111; color: #00ff88; border: 1px solid #00ff88; padding: 8px; margin: 5px;"></textarea>
+      <br>
+      <button onclick="publishProject()">🚀 Опубликовать</button>
+    </div>
+    
+    <div id="projectsList">
+      <h3>Проекты сообщества</h3>
+      <div id="projectsContainer"></div>
+    </div>
+  </div>
+</div>
+
+<div id="neuroGenerator">
+  <div id="neuroContent">
+    <h2>🧠 Нейро-генератор проектов</h2>
+    <button onclick="hideNeuroGenerator()">✖️ Закрыть</button>
+    
+    <div id="neuroSection">
+      <textarea id="neuroPrompt" placeholder="Опишите, какой проект вы хотите создать. Например: 'Создай кнопку которая меняет цвет' или 'Сделай платформер с прыжками'" style="width: 100%; height: 100px; background: #111; color: #00ff88; border: 1px solid #00ccff; padding: 10px; margin: 10px 0; font-family: monospace;"></textarea>
+      <br>
+      
+      <div id="neuroOptions">
+        <label>
+          <input type="checkbox" id="addComments" checked>
+          Добавить комментарии в код
+        </label>
+        <br>
+        <label>
+          <input type="checkbox" id="addDemoImages">
+          Добавить демо-изображения
+        </label>
+        <br>
+        <label>
+          Сложность:
+          <select id="complexityLevel">
+            <option value="simple">Простая</option>
+            <option value="medium" selected>Средняя</option>
+            <option value="complex">Сложная</option>
+          </select>
+        </label>
+      </div>
+      
+      <br>
+      <button onclick="generateWithAI()" id="generateBtn">🚀 Сгенерировать проект</button>
+      <div id="neuroStatus" style="margin-top: 10px; color: #00ccff;"></div>
+    </div>
+    
+    <div id="neuroExamples" style="margin-top: 30px; border-top: 1px solid #00ff88; padding-top: 20px;">
+      <h3>Примеры запросов:</h3>
+      <div class="example" onclick="document.getElementById('neuroPrompt').value = 'Создай кнопку которая меняет цвет при нажатии'" style="cursor: pointer; padding: 8px; margin: 5px; background: #1a1a1a; border: 1px solid #00ff88;">
+        Кнопка с изменением цвета
+      </div>
+      <div class="example" onclick="document.getElementById('neuroPrompt').value = 'Сделай платформер с прыжками и сбором монет'" style="cursor: pointer; padding: 8px; margin: 5px; background: #1a1a1a; border: 1px solid #00ff88;">
+        Простой платформер
+      </div>
+      <div class="example" onclick="document.getElementById('neuroPrompt').value = 'Создай анимацию движущегося объекта по экрану'" style="cursor: pointer; padding: 8px; margin: 5px; background: #1a1a1a; border: 1px solid #00ff88;">
+        Движущаяся анимация
+      </div>
+      <div class="example" onclick="document.getElementById('neuroPrompt').value = 'Сделай игру где нужно избегать препятствий'" style="cursor: pointer; padding: 8px; margin: 5px; background: #1a1a1a; border: 1px solid #00ff88;">
+        Игра с препятствиями
+      </div>
+    </div>
+  </div>
+</div>
+
 <script src="script.js"></script>
+<script>
+  // Инициализация Firebase
+  const firebaseConfig = {
+    databaseURL: "https://cbonline-7a531-default-rtdb.firebaseio.com/"
+  };
+  
+  // Инициализируем Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+  
+  // Глобальная переменная для хранения изображений
+  let communityImages = {};
+  
+  function showCommunity() {
+    document.getElementById('community').style.display = 'block';
+    loadCommunityProjects();
+  }
+  
+  function hideCommunity() {
+    document.getElementById('community').style.display = 'none';
+  }
+  
+  function showNeuroGenerator() {
+    document.getElementById('neuroGenerator').style.display = 'block';
+    document.getElementById('neuroPrompt').focus();
+  }
+  
+  function hideNeuroGenerator() {
+    document.getElementById('neuroGenerator').style.display = 'none';
+    document.getElementById('neuroStatus').textContent = '';
+  }
+  
+  function publishProject() {
+    const projectName = document.getElementById('projectName').value.trim();
+    const authorName = document.getElementById('authorName').value.trim();
+    const description = document.getElementById('projectDescription').value.trim();
+    const code = document.getElementById('code').value;
+    
+    if (!projectName || !authorName || !code) {
+      alert('Пожалуйста, заполните все обязательные поля: название проекта, имя автора и код');
+      return;
+    }
+    
+    // Получаем текущие изображения из script.js
+    const currentImages = getCurrentImages();
+    
+    const projectData = {
+      name: projectName,
+      author: authorName,
+      description: description,
+      code: code,
+      images: currentImages,
+      timestamp: Date.now(),
+      likes: 0
+    };
+    
+    // Сохраняем проект в Firebase
+    const newProjectRef = database.ref('projects').push();
+    newProjectRef.set(projectData)
+      .then(() => {
+        alert('Проект успешно опубликован!');
+        document.getElementById('projectName').value = '';
+        document.getElementById('authorName').value = '';
+        document.getElementById('projectDescription').value = '';
+        loadCommunityProjects();
+      })
+      .catch((error) => {
+        alert('Ошибка при публикации: ' + error.message);
+      });
+  }
+  
+  // Функция для получения изображений из script.js
+  function getCurrentImages() {
+    // Если images доступна глобально, используем её
+    if (typeof images !== 'undefined') {
+      return images;
+    }
+    // Иначе возвращаем пустой объект
+    return {};
+  }
+  
+  function generateWithAI() {
+    const prompt = document.getElementById('neuroPrompt').value.trim();
+    const addComments = document.getElementById('addComments').checked;
+    const addDemoImages = document.getElementById('addDemoImages').checked;
+    const complexity = document.getElementById('complexityLevel').value;
+    
+    if (!prompt) {
+      alert('Пожалуйста, опишите какой проект вы хотите создать');
+      return;
+    }
+    
+    const statusElement = document.getElementById('neuroStatus');
+    const generateBtn = document.getElementById('generateBtn');
+    
+    generateBtn.disabled = true;
+    statusElement.textContent = '🤖 Нейросеть генерирует проект...';
+    statusElement.style.color = '#00ccff';
+    
+    // Имитация работы нейросети с задержкой
+    setTimeout(() => {
+      try {
+        const generatedCode = generateProjectCode(prompt, complexity, addComments);
+        
+        // Вставляем сгенерированный код в редактор
+        document.getElementById('code').value = generatedCode;
+        
+        // Добавляем демо-изображения если нужно
+        if (addDemoImages && typeof images !== 'undefined') {
+          addDemoImagesToProject();
+        }
+        
+        statusElement.textContent = '✅ Проект успешно сгенерирован! Можете запустить его.';
+        statusElement.style.color = '#00ff88';
+        
+        // Автоматически закрываем генератор через 2 секунды
+        setTimeout(() => {
+          hideNeuroGenerator();
+        }, 2000);
+        
+      } catch (error) {
+        statusElement.textContent = '❌ Ошибка генерации: ' + error.message;
+        statusElement.style.color = '#ff4444';
+      } finally {
+        generateBtn.disabled = false;
+      }
+    }, 1500);
+  }
+  
+  function generateProjectCode(prompt, complexity, addComments) {
+    const promptLower = prompt.toLowerCase();
+    
+    // Базовые шаблоны корректного кода DimScript
+    const templates = {
+      // Кнопки и интерфейс
+      'кнопк': `print "Проект с кнопками"
+button 100 100 "Нажми меня" alert "Кнопка нажата!"
+button 250 100 "Измени цвет" color button1 #ff0000
+button 400 100 "Сдвинь вправо" x button2 50
+
+text status 100 200 "Статус: готов" #00ff88
+set counter = 0`,
+
+      // Платформеры
+      'платформ': `print "Платформер игра"
+set score = 0
+set gravity = 1
+set jump_power = -15
+set player_y_vel = 0
+
+// Игрок
+circle player 100 300 20 #ff0000
+
+// Платформы
+rect platform1 50 350 200 20 #00ff00
+rect platform2 300 400 150 20 #00ff00
+rect platform3 200 250 100 20 #00ff00
+
+// Монеты
+circle coin1 150 280 10 #ffff00
+circle coin2 350 370 10 #ffff00
+
+text score_text 20 20 "Очки: 0" #ffffff
+
+forever
+  // Гравитация
+  set player_y_vel = player_y_vel + gravity
+  y player player_y_vel
+  
+  // Проверка столкновений с платформами
+  if player_y_vel > 0
+    if check_collision(player, platform1) or check_collision(player, platform2) or check_collision(player, platform3)
+      set player_y_vel = 0
+      y player 0
+    endif
+  endif
+  
+  // Сбор монет
+  if check_collision(player, coin1)
+    remove coin1
+    set score = score + 1
+    print score
+    text score_text 20 20 "Очки: $score" #ffffff
+  endif
+  
+  if check_collision(player, coin2)
+    remove coin2
+    set score = score + 1
+    print score
+    text score_text 20 20 "Очки: $score" #ffffff
+  endif
+  
+  wait 20
+end`,
+
+      // Анимации
+      'анимац': `print "Анимация движения"
+set pos_x = 100
+set pos_y = 200
+set direction = 1
+
+circle ball 100 200 30 #00ccff
+rect wall 500 150 20 200 #888888
+
+forever
+  set pos_x = pos_x + (3 * direction)
+  move ball pos_x pos_y
+  
+  // Проверка столкновения со стеной
+  if pos_x >= 470
+    set direction = -1
+  endif
+  if pos_x <= 30
+    set direction = 1
+  endif
+  
+  wait 30
+end`,
+
+      // Игры с препятствиями
+      'препятств': `print "Избегай препятствий!"
+set score = 0
+set game_speed = 5
+
+circle player 200 300 25 #00ff88
+rect obstacle 400 275 30 50 #ff0000
+
+text score_display 20 20 "Счет: 0" #ffffff
+
+forever
+  // Движение препятствия
+  x obstacle -game_speed
+  
+  // Если препятствие ушло за экран
+  if get_x(obstacle) < -50
+    move obstacle 450 275
+    set score = score + 1
+    text score_display 20 20 "Счет: $score" #ffffff
+    set game_speed = game_speed + 0.2
+  endif
+  
+  // Проверка столкновения
+  if check_collision(player, obstacle)
+    alert "Игра окончена! Счет: $score"
+    set score = 0
+    set game_speed = 5
+    move obstacle 450 275
+    text score_display 20 20 "Счет: 0" #ffffff
+  endif
+  
+  wait 20
+end`,
+
+      // Простые интерактивные элементы
+      'интеракт': `print "Интерактивный проект"
+set color_index = 0
+set colors = "#ff0000 #00ff00 #0000ff #ffff00 #ff00ff"
+
+circle interactive_circle 300 250 40 #ff0000
+button 250 350 "Сменить цвет" change_color
+button 350 350 "Увеличить" size interactive_circle 60 60
+button 450 350 "Уменьшить" size interactive_circle 30 30
+
+forever
+  wait 100
+end`,
+
+      // Проекты по умолчанию (простые)
+      'default': `print "Сгенерированный проект"
+button 200 200 "Моя кнопка" alert "Кнопка работает!"
+text info 200 250 "Этот проект создан нейросетью" #00ff88
+
+// Добавьте свой код здесь
+set counter = 0
+forever
+  set counter = counter + 1
+  wait 1000
+end`
+    };
+
+    // Определяем тип проекта
+    let projectType = 'default';
+    
+    if (promptLower.includes('кнопк') || promptLower.includes('нажат') || promptLower.includes('клик')) {
+      projectType = 'кнопк';
+    } else if (promptLower.includes('платформ') || promptLower.includes('прыжк') || promptLower.includes('монет')) {
+      projectType = 'платформ';
+    } else if (promptLower.includes('анимац') || promptLower.includes('движен') || promptLower.includes('перемещ')) {
+      projectType = 'анимац';
+    } else if (promptLower.includes('препятств') || promptLower.includes('враг') || promptLower.includes('избега')) {
+      projectType = 'препятств';
+    } else if (promptLower.includes('интеракт') || promptLower.includes('взаимод') || promptLower.includes('изменен')) {
+      projectType = 'интеракт';
+    }
+
+    // Генерируем код
+    let code = templates[projectType] || templates['default'];
+    
+    // Настраиваем сложность
+    if (complexity === 'simple') {
+      code = code.replace(/wait \d+/g, 'wait 50');
+      code = code.replace(/set game_speed = \d+/g, 'set game_speed = 3');
+    } else if (complexity === 'complex') {
+      code = code.replace(/wait \d+/g, 'wait 10');
+      code = code.replace(/set game_speed = \d+/g, 'set game_speed = 8');
+      // Добавляем дополнительные элементы для сложности
+      if (projectType === 'препятств') {
+        code = code.replace('rect obstacle', 'rect obstacle1');
+        code += '\nrect obstacle2 600 325 30 50 #ff5500\n';
+      }
+    }
+
+    // Добавляем комментарии
+    if (addComments) {
+      const commentHeader = `// ==============================================
+// 🧠 Сгенерировано нейросетью DimScript
+// Запрос: "${prompt}"
+// Тип: ${projectType}
+// Сложность: ${complexity}
+// ==============================================
+
+`;
+      code = commentHeader + code;
+    }
+
+    return code;
+  }
+  
+  function addDemoImagesToProject() {
+    // Простые SVG изображения в base64
+    const demoImages = {
+      'player': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNmZjAwMDAiLz4KPC9zdmc+',
+      'coin': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjAiIGhlaWdodD0iMjAiIHZpZXdCb3g9IjAgMCAyMCAyMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTAiIGN5PSIxMCIgcj0iMTAiIGZpbGw9IiNmZmZmMDAiLz4KPC9zdmc+',
+      'obstacle': 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzAiIGhlaWdodD0iNTAiIHZpZXdCb3g9IjAgMCAzMCA1MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjZmYwMDAwIi8+Cjwvc3ZnPg=='
+    };
+    
+    // Добавляем изображения
+    for (const [name, dataUrl] of Object.entries(demoImages)) {
+      images[name] = dataUrl;
+    }
+    
+    // Обновляем галерею
+    if (typeof updateImageGallery === 'function') {
+      updateImageGallery();
+    }
+  }
+  
+  function loadCommunityProjects() {
+    const projectsContainer = document.getElementById('projectsContainer');
+    projectsContainer.innerHTML = '<div>Загрузка проектов...</div>';
+    
+    database.ref('projects').orderByChild('timestamp').once('value')
+      .then((snapshot) => {
+        projectsContainer.innerHTML = '';
+        
+        if (!snapshot.exists()) {
+          projectsContainer.innerHTML = '<div>Пока нет проектов. Будьте первым!</div>';
+          return;
+        }
+        
+        const projects = [];
+        snapshot.forEach((childSnapshot) => {
+          projects.push({
+            id: childSnapshot.key,
+            ...childSnapshot.val()
+          });
+        });
+        
+        // Сортируем по времени (новые сначала)
+        projects.sort((a, b) => b.timestamp - a.timestamp);
+        
+        projects.forEach((project) => {
+          const projectElement = document.createElement('div');
+          projectElement.className = 'community-project';
+          projectElement.style.border = '1px solid #00ff88';
+          projectElement.style.padding = '15px';
+          projectElement.style.margin = '10px 0';
+          projectElement.style.background = '#111';
+          
+          projectElement.innerHTML = `
+            <h4>${project.name}</h4>
+            <div><strong>Автор:</strong> ${project.author}</div>
+            <div><strong>Описание:</strong> ${project.description || 'Нет описания'}</div>
+            <div><strong>Дата:</strong> ${new Date(project.timestamp).toLocaleString()}</div>
+            <div><strong>Лайков:</strong> ${project.likes || 0}</div>
+            <button onclick="loadProject('${project.id}')" style="margin-top: 10px;">📝 Загрузить проект</button>
+            <button onclick="likeProject('${project.id}', ${project.likes || 0})" style="margin-top: 10px;">❤️ Лайк</button>
+          `;
+          
+          projectsContainer.appendChild(projectElement);
+        });
+      })
+      .catch((error) => {
+        projectsContainer.innerHTML = `<div>Ошибка загрузки: ${error.message}</div>`;
+      });
+  }
+  
+  function loadProject(projectId) {
+    database.ref('projects/' + projectId).once('value')
+      .then((snapshot) => {
+        const project = snapshot.val();
+        if (project) {
+          document.getElementById('code').value = project.code || '';
+          
+          // Сохраняем изображения для последующего использования
+          communityImages = project.images || {};
+          
+          hideCommunity();
+          alert('Проект загружен! Теперь вы можете запустить его.');
+          
+          // Обновляем изображения в менеджере картинок
+          if (typeof updateImageGallery === 'function') {
+            // Копируем изображения в основной объект images
+            if (typeof images !== 'undefined' && project.images) {
+              for (const key in project.images) {
+                images[key] = project.images[key];
+              }
+              updateImageGallery();
+            }
+          }
+        }
+      })
+      .catch((error) => {
+        alert('Ошибка загрузки проекта: ' + error.message);
+      });
+  }
+  
+  function likeProject(projectId, currentLikes) {
+    database.ref('projects/' + projectId + '/likes').set((currentLikes || 0) + 1)
+      .then(() => {
+        loadCommunityProjects(); // Обновляем список
+      })
+      .catch((error) => {
+        alert('Ошибка: ' + error.message);
+      });
+  }
+</script>
 </body>
 </html>

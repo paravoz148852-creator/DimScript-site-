@@ -125,3 +125,264 @@ canvas {
   position: absolute;
   transform-origin: center;
 }
+
+/* Стили для сообщества */
+#community {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1001;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#communityContent {
+  max-width: 900px;
+  margin: 0 auto;
+  background: #111;
+  padding: 20px;
+  border: 2px solid #00ff88;
+  border-radius: 10px;
+}
+
+#community h2 {
+  color: #00ff88;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#publishSection {
+  margin-bottom: 30px;
+  padding: 20px;
+  border: 1px solid #00ccff;
+  border-radius: 5px;
+}
+
+#projectsList {
+  margin-top: 20px;
+}
+
+.community-project {
+  transition: all 0.3s ease;
+  border: 1px solid #00ff88;
+  padding: 15px;
+  margin: 10px 0;
+  background: #111;
+}
+
+.community-project:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 255, 136, 0.3);
+}
+
+#community button {
+  margin: 5px;
+}
+
+#community input, #community textarea {
+  font-family: monospace;
+  background: #111;
+  color: #00ff88;
+  border: 1px solid #00ff88;
+  padding: 8px;
+  margin: 5px;
+}
+
+#community input[type="text"] {
+  width: 300px;
+}
+
+#community textarea {
+  width: 100%;
+  height: 60px;
+}
+
+/* Стили для нейро-генератора */
+#neuroGenerator {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.95);
+  z-index: 1002;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#neuroContent {
+  max-width: 800px;
+  margin: 0 auto;
+  background: #111;
+  padding: 20px;
+  border: 2px solid #00ccff;
+  border-radius: 10px;
+}
+
+#neuroContent h2 {
+  color: #00ccff;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+#neuroPrompt {
+  font-family: monospace;
+  resize: vertical;
+  width: 100%;
+  height: 100px;
+  background: #111;
+  color: #00ff88;
+  border: 1px solid #00ccff;
+  padding: 10px;
+  margin: 10px 0;
+}
+
+#neuroOptions {
+  color: #00ff88;
+  margin: 10px 0;
+}
+
+#neuroOptions label {
+  margin: 5px 0;
+  display: block;
+}
+
+#neuroOptions input[type="checkbox"],
+#neuroOptions select {
+  margin-right: 8px;
+}
+
+#neuroOptions select {
+  background: #111;
+  color: #00ff88;
+  border: 1px solid #00ff88;
+  padding: 3px;
+}
+
+#generateBtn {
+  background: linear-gradient(45deg, #00ccff, #00ff88);
+  color: #000;
+  font-weight: bold;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+#generateBtn:hover:not(:disabled) {
+  transform: scale(1.05);
+}
+
+#generateBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+#neuroStatus {
+  font-family: monospace;
+  min-height: 20px;
+  margin-top: 10px;
+}
+
+#neuroExamples {
+  margin-top: 30px;
+  border-top: 1px solid #00ff88;
+  padding-top: 20px;
+}
+
+.example {
+  cursor: pointer;
+  padding: 8px;
+  margin: 5px;
+  background: #1a1a1a;
+  border: 1px solid #00ff88;
+  transition: all 0.3s ease;
+}
+
+.example:hover {
+  background: #2a2a2a;
+  transform: translateX(5px);
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+  body {
+    padding: 10px;
+  }
+  
+  textarea {
+    height: 120px;
+  }
+  
+  button {
+    padding: 8px 16px;
+    margin-right: 5px;
+    font-size: 14px;
+  }
+  
+  #communityContent,
+  #neuroContent,
+  #imageManagerContent {
+    padding: 15px;
+    margin: 10px;
+  }
+  
+  #community input[type="text"] {
+    width: 100%;
+  }
+  
+  .image-thumbnail {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .community-project {
+    padding: 10px;
+  }
+}
+
+/* Анимации */
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.7; }
+  100% { opacity: 1; }
+}
+
+.loading {
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes slideIn {
+  from { transform: translateY(-20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+#communityContent,
+#neuroContent,
+#imageManagerContent {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Стили для скроллбара */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #111;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #00ff88;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #00cc66;
+}
